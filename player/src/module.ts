@@ -7,3 +7,4 @@ export * from "./pathfinding/bfs";
 export * from "./pathfinding/utils";
 export * from "./tick";
 export * from "./utils/vector";
+export * from './visibility/visibility';

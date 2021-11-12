@@ -6,7 +6,7 @@ import { resolveDaggerIntent } from "./intents/dagger-intent";
 import { IIntent } from "./intents/intent";
 import { resolveKillIntent } from "./intents/kill-intent";
 import { resolveSafetyIntent } from "./intents/safety-intent";
-import { Block, calculateSafetyMatrix } from "./module";
+import { Block, calculateSafetyMatrix, calculateVisibilityMatrix } from "./module";
 import { getDangerousPointsOfInterest, getPointsOfInterest, getPointsOfInterestWithSafety, IPointsOfInterest } from "./pathfinding/poi";
 
 type TickArgs = { state: IState, stateHistory: IState[], intentHistory: IIntent[] };
@@ -27,6 +27,11 @@ export const getSortedIntents = ({ state, stateHistory, intentHistory }: TickArg
     dangers: monstersList.map((v) => v.position)
   })
 
+  const visibilityMatrix = calculateVisibilityMatrix({
+    blocks: state.map.blocks,
+    positions: monstersList.map((v) => v.position),
+  })
+
   const poiArgs = {
     start: player.position,
     blocks: state.map.blocks,
@@ -43,11 +48,12 @@ export const getSortedIntents = ({ state, stateHistory, intentHistory }: TickArg
   const safetyPoi = getPointsOfInterestWithSafety({
     ...poiArgs,
     safetyMatrix: safetyMatrix,
+    visibilityMatrix: visibilityMatrix,
   });
 
   const dangerousPoi = getDangerousPointsOfInterest({ poi, safePoi: safetyPoi });
 
-  const intentArgs = { state, player, safetyMatrix }
+  const intentArgs = { state, player, safetyMatrix, visibilityMatrix }
 
   let preferredBlockPoi: IPointsOfInterest;
 

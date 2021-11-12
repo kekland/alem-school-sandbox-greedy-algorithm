@@ -83,7 +83,7 @@ const main = async () => {
       responseStr += chalk.white(result.frames)
 
       passes += 1
-      _passTicks == result.frames
+      _passTicks += result.frames
     }
     else {
       responseStr += (result.didTimeout || result.frames < 300) ? chalk.bgRed('Fail') : chalk.yellow('Fail')
@@ -132,7 +132,7 @@ const main = async () => {
 
   console.log('')
   console.log(chalk.white('Coins: ' + chalk.green(_collectedCoins) + chalk.gray('/') + chalk.green(_totalCoins)))
-  console.log(chalk.white('Avg. ticks: ' + chalk.green(_passTicks / 300.0)))
+  console.log(chalk.white('Avg. ticks per pass: ' + chalk.green(_passTicks / passes)))
 }
 
 main()

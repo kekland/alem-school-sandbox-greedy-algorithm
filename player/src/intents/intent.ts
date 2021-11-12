@@ -1,5 +1,5 @@
 import { Action } from "../game/action";
-import { IPlayer, IState, SafetyMatrix } from "../module";
+import { IPlayer, IState, SafetyMatrix, VisibilityMatrix } from "../module";
 import { IPath } from "../pathfinding/path";
 import { Vector2 } from "../utils/vector";
 
@@ -16,4 +16,5 @@ export type IntentResolver<T> = (args: {
   player: IPlayer, 
   paths: T[],
   safetyMatrix: SafetyMatrix,
+  visibilityMatrix: VisibilityMatrix,
 }) => IIntent[];

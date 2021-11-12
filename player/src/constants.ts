@@ -13,4 +13,5 @@ export const Constants = {
   bonusEquippedLife: 30,
   safetyThreshold: 5,
   safetyIterationDepth: 6,
+  defaultVisibilityRadius: 6,
 }

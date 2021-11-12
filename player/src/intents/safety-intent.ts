@@ -2,10 +2,12 @@ import { Constants } from "../constants";
 import { actionToVector2, calcuateSafety, IIntent, IntentResolver, iterateOnGameMap, Vector2 } from "../module";
 import { calculateShortestPath, IPath, IPathEntity, pathToString } from "../pathfinding/path";
 
-export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths, player, safetyMatrix }) => {
+export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths, player, safetyMatrix, visibilityMatrix }) => {
   const currentSafety = safetyMatrix[player.position.y][player.position.x];
+  const isVisible = visibilityMatrix[player.position.y][player.position.x];
 
   if (currentSafety >= Constants.safetyThreshold) return [];
+  if (currentSafety >= 3 && !isVisible) return [];
   if (player.dagger != null) return [];
 
   // Safety is urgent

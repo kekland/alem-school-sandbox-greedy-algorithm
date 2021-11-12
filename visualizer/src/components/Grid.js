@@ -5,7 +5,7 @@ import { IntentDisplay } from './IntentDisplay';
 const _width = 13;
 const _height = 11;
 
-export const Grid = ({ blockMatrix, safetyMatrix, player, actingIntent, entities, onTap }) => {
+export const Grid = ({ blockMatrix, safetyMatrix, visibilityMatrix, player, actingIntent, entities, onTap }) => {
   const blocks = [];
 
   for (let y = 0; y < _height; y++) {
@@ -14,6 +14,7 @@ export const Grid = ({ blockMatrix, safetyMatrix, player, actingIntent, entities
         <BlockComponent
           block={blockMatrix[y][x]}
           safety={safetyMatrix ? safetyMatrix[y][x] : Number.MAX_SAFE_INTEGER}
+          visibility={visibilityMatrix ? visibilityMatrix[y][x] : false}
           isTargeted={actingIntent && actingIntent.target.x === x && actingIntent.target.y === y}
           entities={entities.filter(entity => entity.position.x === x && entity.position.y === y)}
           onChange={() => onTap(x, y)}

@@ -9,7 +9,7 @@ import Player from '../assets/player.png'
 import { lerpColor } from '../utils'
 
 
-export const BlockComponent = ({ block, safety, entities, onChange }) => {
+export const BlockComponent = ({ block, safety, visibility, entities, onChange }) => {
   let contentImgs = [];
 
   if (block === Block.bonus) {
@@ -41,6 +41,7 @@ export const BlockComponent = ({ block, safety, entities, onChange }) => {
       onClick={onChange}
     >
       <div style={{ width: 48, height: 48, backgroundColor, opacity: 0.1 }} />
+      <div style={{ width: 48, height: 48, backgroundColor: 'white', opacity: visibility ? 0.1 : 0.0 }} />
       <div style={{ opacity: 0.35, color: 'black' }}>
         {backgroundColor != null ? safety : null}
       </div>

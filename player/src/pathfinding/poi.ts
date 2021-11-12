@@ -1,4 +1,4 @@
-import { Vector2, BlockMatrix, IEntity, Block, SafetyMatrix } from "../module";
+import { Vector2, BlockMatrix, IEntity, Block, SafetyMatrix, VisibilityMatrix } from "../module";
 import { iterateOnGameMap } from "./bfs";
 import { IPath, IPathBlock, IPathEntity } from "./path";
 
@@ -50,14 +50,14 @@ export const getPointsOfInterest = ({ start, blocks, entities, predicate }: GetP
   }
 }
 
-type GetPointsOfInterestWithSafetyArgs = { start: Vector2, blocks: BlockMatrix, safetyMatrix: SafetyMatrix, entities: IEntity[] };
+type GetPointsOfInterestWithSafetyArgs = { start: Vector2, blocks: BlockMatrix, safetyMatrix: SafetyMatrix, visibilityMatrix: VisibilityMatrix, entities: IEntity[] };
 
-export const getPointsOfInterestWithSafety = ({ start, blocks, safetyMatrix, entities }: GetPointsOfInterestWithSafetyArgs): IPointsOfInterest => {
+export const getPointsOfInterestWithSafety = ({ start, blocks, safetyMatrix, visibilityMatrix, entities }: GetPointsOfInterestWithSafetyArgs): IPointsOfInterest => {
   return getPointsOfInterest({
     start,
     blocks,
     entities,
-    predicate: (position) => safetyMatrix[position.y][position.x] <= 4
+    predicate: (position) => safetyMatrix[position.y][position.x] <= 4 || !visibilityMatrix[position.y][position.x]
   });
 }
 

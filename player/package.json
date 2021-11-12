@@ -15,6 +15,7 @@
   },
   "scripts": {
     "build": "webpack",
-    "test": "npm run build && node test/test"
+    "test": "npm run build && node test/test",
+    "test-existing": "node test/test"
   }
 }

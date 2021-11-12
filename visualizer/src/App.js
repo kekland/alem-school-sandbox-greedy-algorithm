@@ -1,4 +1,4 @@
-import { Block, calculateSafetyMatrix, getSortedIntents, Vector2 } from 'player';
+import { Block, calculateSafetyMatrix, calculateVisibilityMatrix, getSortedIntents, Vector2 } from 'player';
 import React, { useEffect, useState } from 'react';
 import { Grid } from './components/Grid';
 import { Brushes } from './components/Brushes';
@@ -184,6 +184,7 @@ const App = () => {
   const intents = getSortedIntents({ state, intentHistory: [], stateHistory: [] });
   const dangers = monsters.map((v) => v.position);
   const safetyMatrix = calculateSafetyMatrix({ blocks: blockMatrix, dangers });
+  const visibilityMatrix = calculateVisibilityMatrix({ positions: dangers, blocks: blockMatrix });
 
   useEffect(() => {
     const intents = getSortedIntents({ state, intentHistory: [], stateHistory: [] });
@@ -199,6 +200,7 @@ const App = () => {
         <Grid
           blockMatrix={blockMatrix}
           safetyMatrix={safetyMatrix}
+          visibilityMatrix={visibilityMatrix}
           player={player}
           entities={entities}
           actingIntent={actingIntent}
