@@ -79,7 +79,10 @@ export const getSortedIntents = ({ state, stateHistory, intentHistory }: TickArg
     }),
     ...resolveDaggerIntent({
       ...intentArgs,
-      paths: preferredBlockPoi.blocks.filter((v) => v.target === Block.dagger),
+      paths: [
+        ...poi.blocks.filter((v) => v.target === Block.dagger),
+        ...safetyPoi.blocks.filter((v) => v.target === Block.dagger),
+      ],
     }),
     ...resolveKillIntent({
       ...intentArgs,

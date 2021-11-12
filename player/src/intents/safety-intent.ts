@@ -1,6 +1,6 @@
 import { Constants } from "../constants";
-import { actionToVector2, calcuateSafety, IIntent, IntentResolver, iterateOnGameMap, Vector2 } from "../module";
-import { calculateShortestPath, IPath, IPathEntity, pathToString } from "../pathfinding/path";
+import { actionToVector2, Block, calcuateSafety, IIntent, IntentResolver, iterateOnGameMap, Vector2 } from "../module";
+import { calculateShortestPath, IPath, IPathEntity, pathToString, simulatePath } from "../pathfinding/path";
 
 export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths, player, safetyMatrix, visibilityMatrix }) => {
   const currentSafety = safetyMatrix[player.position.y][player.position.x];
@@ -17,7 +17,7 @@ export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths,
     monsters[monsterPath.target] = monsterPath.end.copy();
   }
 
-  const pathSafety: { [id: string]: { path: IPath, safety: number } } = {};
+  const pathSafety: { [id: string]: { path: IPath, safety: number, coinsCollected: number } } = {};
 
   iterateOnGameMap({
     start: player.position,
@@ -52,6 +52,8 @@ export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths,
         dangers: Object.values(newMonsterPositions),
       })
 
+      let coinsCollected = 0;
+
       const path: IPath = {
         actions,
         start: player.position,
@@ -59,9 +61,16 @@ export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths,
         type: 'safety',
       }
 
+      simulatePath(path, (i, position) => {
+        if (state.map.blocks[position.y][position.x] === Block.coin) {
+          coinsCollected++;
+        }
+      })
+
       pathSafety[pathToString(path)] = {
         path,
         safety,
+        coinsCollected,
       }
 
       return safety == 0;
@@ -77,7 +86,7 @@ export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths,
 
   const intents: IIntent[] = escapePaths.map((v) => ({
     payoff: Constants.safetyPayoff,
-    certainty: v.safety,
+    certainty: v.safety + v.coinsCollected,
     duration: 1.0,
     actions: v.path.actions,
     target: v.path.end,

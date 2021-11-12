@@ -15,7 +15,7 @@ export const resolveDaggerIntent: IntentResolver<IPathBlock> = ({ state, player,
 
     let isTotallySafe = true;
     simulatePath(path, (i, position) => {
-      if (safetyMatrix[position.y][position.x] <= i) {
+      if (safetyMatrix[position.y][position.x] <= i + 2) {
         isTotallySafe = false;
       }
     })
