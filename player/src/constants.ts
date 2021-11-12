@@ -11,4 +11,5 @@ export const Constants = {
   bonusLife: 15,
   daggerEquippedLife: 15,
   bonusEquippedLife: 30,
+  safetyThreshold: 5,
 }

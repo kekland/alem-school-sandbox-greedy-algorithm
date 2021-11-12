@@ -5,7 +5,7 @@ import { calculateShortestPath, IPath, IPathEntity, pathToString } from "../path
 export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths, player, safetyMatrix }) => {
   const currentSafety = safetyMatrix[player.position.y][player.position.x];
 
-  if (currentSafety >= 5) return [];
+  if (currentSafety >= Constants.safetyThreshold) return [];
   if (player.dagger != null) return [];
 
   // Safety is urgent

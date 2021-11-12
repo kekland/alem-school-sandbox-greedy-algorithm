@@ -28,7 +28,7 @@ const sendSolution = async (level) => {
       break;
     }
 
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    await new Promise(resolve => setTimeout(resolve, 500))
   }
 
   const { data: gameResult } = await axios.get(`https://s3.alem.school/storage/gamesessions/${key}.json`, { headers })
@@ -58,6 +58,7 @@ const sendSolution = async (level) => {
 }
 
 const main = async () => {
+  console.log('')
   console.log(chalk.green('Solution loaded'));
 
   let passes = 0
@@ -69,7 +70,7 @@ const main = async () => {
 
   for (let i = 0; i < 10; i++) {
     const level = 5
-    console.log(chalk.gray(`Level ${level}: `));
+    console.log(chalk.gray(`Run #${i}: `));
     const result = await sendSolution(level);
 
     let responseStr = ''
@@ -117,7 +118,7 @@ const main = async () => {
     console.log(responseStr)
     console.log('')
 
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    await new Promise(resolve => setTimeout(resolve, 500))
   }
 
   console.log('')
