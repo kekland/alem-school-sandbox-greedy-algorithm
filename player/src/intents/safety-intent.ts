@@ -20,7 +20,7 @@ export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths,
   iterateOnGameMap({
     start: player.position,
     blocks: state.map.blocks,
-    maxDepth: 5,
+    maxDepth: Constants.safetyIterationDepth,
     callback: (playerPosition, actions) => {
       const t = actions.length;
 
@@ -38,7 +38,7 @@ export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths,
 
         // Apply [t] actions to the monster's position and recalculate safety matrix
         const newMonsterPosition = monsterPosition.addMany(
-          ...newMonsterPath.actions.slice(0, t).map(actionToVector2)
+          ...newMonsterPath.actions.slice(0, t + 1).map(actionToVector2)
         )
 
         newMonsterPositions[id] = newMonsterPosition;
@@ -62,7 +62,7 @@ export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths,
         safety,
       }
 
-      return safety <= 1;
+      return safety == 0;
     },
   });
 

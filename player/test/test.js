@@ -28,7 +28,7 @@ const sendSolution = async (level) => {
       break;
     }
 
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, 1000))
   }
 
   const { data: gameResult } = await axios.get(`https://s3.alem.school/storage/gamesessions/${key}.json`, { headers })
@@ -68,6 +68,8 @@ const main = async () => {
   let _collectedCoins = 0
   let _totalCoins = 0
 
+  let _passTicks = 0
+
   for (let i = 0; i < 10; i++) {
     const level = 5
     console.log(chalk.gray(`Run #${i}: `));
@@ -81,6 +83,7 @@ const main = async () => {
       responseStr += chalk.white(result.frames)
 
       passes += 1
+      _passTicks == result.frames
     }
     else {
       responseStr += (result.didTimeout || result.frames < 300) ? chalk.bgRed('Fail') : chalk.yellow('Fail')
@@ -118,7 +121,7 @@ const main = async () => {
     console.log(responseStr)
     console.log('')
 
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, 2000))
   }
 
   console.log('')
@@ -129,6 +132,7 @@ const main = async () => {
 
   console.log('')
   console.log(chalk.white('Coins: ' + chalk.green(_collectedCoins) + chalk.gray('/') + chalk.green(_totalCoins)))
+  console.log(chalk.white('Avg. ticks: ' + chalk.green(_passTicks / 300.0)))
 }
 
 main()
