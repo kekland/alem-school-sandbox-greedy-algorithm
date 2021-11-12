@@ -1,8 +1,9 @@
 import { Constants } from "../constants";
 import { IIntent, IntentResolver } from "../module";
-import { getPathSafety, IPathBlock } from "../pathfinding/path";
+import { getPathSafety, IPathBlock, simulatePath } from "../pathfinding/path";
 
 export const resolveDaggerIntent: IntentResolver<IPathBlock> = ({ state, player, paths, safetyMatrix }) => {
+  const currentSafety = safetyMatrix[player.position.y][player.position.x];
   const intents: IIntent[] = [];
 
   for (const path of paths) {
@@ -12,15 +13,22 @@ export const resolveDaggerIntent: IntentResolver<IPathBlock> = ({ state, player,
     // We can't equip this in time, ignore it
     if (path.actions.length >= ticksLeft) continue;
 
-    const safety = path.actions.length < safetyMatrix[path.end.y][path.end.x] ?
-      1.0 :
-      getPathSafety({ path, safetyMatrix })
+    let isTotallySafe = true;
+    simulatePath(path, (i, position) => {
+      if (safetyMatrix[position.y][position.x] <= i) {
+        isTotallySafe = false;
+      }
+    })
+
+    const safety = getPathSafety({ path, safetyMatrix })
 
     intents.push({
       actions: path.actions,
-      certainty: safety,
+      certainty: isTotallySafe ? 1.0 : safety,
       duration: path.actions.length,
-      payoff: Constants.daggerPayoff,
+      payoff: currentSafety <= Constants.safetyThreshold && isTotallySafe ?
+        Constants.criticalDaggerPayoff :
+        Constants.daggerPayoff,
       target: path.end,
     })
   }

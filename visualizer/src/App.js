@@ -133,7 +133,6 @@ const App = () => {
   }, [blockMatrix, params])
 
   const onBrushUsed = (x, y) => {
-    console.log(x, y)
     if (brush === 'monster') {
       const monster = monsters.find(entity => entity.position.x === x && entity.position.y === y);
       if (monster != null) {

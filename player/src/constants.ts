@@ -1,6 +1,7 @@
 export const Constants = {
   coinPayoff: 1.0,
   daggerPayoff: 1.5,
+  criticalDaggerPayoff: 1e7,
   pathSafetyRelativeDangerScale: 0.25,
   pathSafetyRelativeDangerThreshold: 3.5,
   pathSafetyDangerousMultiplier: 0.1,

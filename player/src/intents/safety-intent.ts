@@ -7,7 +7,7 @@ export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths,
   const isVisible = visibilityMatrix[player.position.y][player.position.x];
 
   if (currentSafety >= Constants.safetyThreshold) return [];
-  if (currentSafety >= 3 && !isVisible) return [];
+  if (currentSafety > 3 && !isVisible) return [];
   if (player.dagger != null) return [];
 
   // Safety is urgent
