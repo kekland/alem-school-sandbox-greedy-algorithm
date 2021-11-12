@@ -1,5 +1,6 @@
 import { Constants } from "../constants";
 import { actionToVector2, Block, calcuateSafety, IIntent, IntentResolver, iterateOnGameMap, Vector2 } from "../module";
+import { iterateOnGameMapBranched } from "../pathfinding/dfs";
 import { calculateShortestPath, IPath, IPathEntity, pathToString, simulatePath } from "../pathfinding/path";
 
 export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths, player, safetyMatrix, visibilityMatrix }) => {
@@ -19,7 +20,7 @@ export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths,
 
   const pathSafety: { [id: string]: { path: IPath, safety: number, coinsCollected: number } } = {};
 
-  iterateOnGameMap({
+  iterateOnGameMapBranched({
     start: player.position,
     blocks: state.map.blocks,
     maxDepth: Constants.safetyIterationDepth,
@@ -40,7 +41,7 @@ export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths,
 
         // Apply [t] actions to the monster's position and recalculate safety matrix
         const newMonsterPosition = monsterPosition.addMany(
-          ...newMonsterPath.actions.slice(0, t + 1).map(actionToVector2)
+          ...newMonsterPath.actions.slice(0, t).map(actionToVector2)
         )
 
         newMonsterPositions[id] = newMonsterPosition;
@@ -73,7 +74,7 @@ export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths,
         coinsCollected,
       }
 
-      return safety == 0;
+      return safety < currentSafety;
     },
   });
 
@@ -85,8 +86,8 @@ export const resolveSafetyIntent: IntentResolver<IPathEntity> = ({ state, paths,
   });
 
   const intents: IIntent[] = escapePaths.map((v) => ({
-    payoff: Constants.safetyPayoff,
-    certainty: v.safety + v.coinsCollected,
+    payoff: Constants.safetyPayoff + v.coinsCollected,
+    certainty: v.safety,
     duration: 1.0,
     actions: v.path.actions,
     target: v.path.end,
