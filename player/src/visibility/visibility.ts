@@ -121,3 +121,7 @@ export const calculateVisibilityMatrix = ({ positions, blocks, radius }: Calcula
 
   return visibilityMatrix;
 }
+
+export const isVisible = ({ light, position, blocks }: { light: Vector2, position: Vector2, blocks: BlockMatrix }) => {
+  return calculateVisibilityMatrix({ positions: [light], blocks })[position.y][position.x];
+}

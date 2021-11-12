@@ -8,12 +8,13 @@ export interface IIntent {
   duration: number;
   payoff: number;
   actions: Action[];
+  validateSafety: boolean;
   target?: Vector2;
 }
 
 export type IntentResolver<T> = (args: {
   state: IState,
-  player: IPlayer, 
+  player: IPlayer,
   paths: T[],
   safetyMatrix: SafetyMatrix,
   visibilityMatrix: VisibilityMatrix,

@@ -2,16 +2,18 @@ import { Action, actionToVector2 } from "../game/action";
 import { Block, BlockMatrix } from "../game/map";
 import { Vector2 } from "../utils/vector";
 
-export const _traversalActions = [Action.up, Action.down, Action.left, Action.right];
+export const _traversalActionsVerticalPriority = [Action.up, Action.down, Action.left, Action.right];
+export const _traversalActionsHorizontalPriority = [Action.left, Action.right, Action.up, Action.down];
 
 type IterateOnGameMapArgs = {
   start: Vector2;
   blocks: BlockMatrix;
   maxDepth?: number;
+  verticalPriority?: boolean;
   callback: (position: Vector2, actions: Action[]) => boolean;
 }
 
-export const iterateOnGameMap = ({ start, blocks, maxDepth, callback }: IterateOnGameMapArgs) => {
+export const iterateOnGameMap = ({ start, blocks, maxDepth, callback, verticalPriority }: IterateOnGameMapArgs) => {
   const _maxDepth = maxDepth ?? 1000;
 
   const visited: boolean[][] = []
@@ -37,6 +39,10 @@ export const iterateOnGameMap = ({ start, blocks, maxDepth, callback }: IterateO
       !hasWallAtPosition(point) &&
       !visited[point.y][point.x];
   }
+
+  const _traversalActions = (verticalPriority ?? true) ?
+    _traversalActionsVerticalPriority :
+    _traversalActionsHorizontalPriority;
 
   while (queue.length > 0) {
     const item = queue.shift()!;

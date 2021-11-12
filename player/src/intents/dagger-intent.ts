@@ -30,6 +30,7 @@ export const resolveDaggerIntent: IntentResolver<IPathBlock> = ({ state, player,
         Constants.criticalDaggerPayoff :
         Constants.daggerPayoff,
       target: path.end,
+      validateSafety: true,
     })
   }
 

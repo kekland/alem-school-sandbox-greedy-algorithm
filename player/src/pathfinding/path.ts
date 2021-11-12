@@ -55,14 +55,15 @@ export const getPathSafety = ({ path, safetyMatrix }: { path: IPath, safetyMatri
   return safety;
 }
 
-type CalculateShortestPathArgs = { start: Vector2, end: Vector2, blocks: BlockMatrix };
+type CalculateShortestPathArgs = { start: Vector2, end: Vector2, blocks: BlockMatrix, verticalPriority?: boolean };
 
-export const calculateShortestPath = ({ start, end, blocks }: CalculateShortestPathArgs): IPath | undefined => {
-  let path: IPath | undefined;
+export const calculateShortestPath = ({ start, end, blocks, verticalPriority }: CalculateShortestPathArgs): IPath => {
+  let path: IPath
 
   iterateOnGameMap({
     start,
     blocks,
+    verticalPriority,
     callback: (position, actions) => {
       if (position.equals(end)) {
         path = {
@@ -77,5 +78,5 @@ export const calculateShortestPath = ({ start, end, blocks }: CalculateShortestP
     },
   });
 
-  return path;
+  return path!;
 }

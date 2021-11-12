@@ -1,4 +1,4 @@
-import { Action, actionToVector2, Block, BlockMatrix, Vector2 } from "../module"
+import { Action, actionToVector2, Block, BlockMatrix, inverseAction, Vector2 } from "../module"
 
 export const _traversalActions = [Action.up, Action.down, Action.left, Action.right];
 
@@ -23,7 +23,7 @@ export const iterateOnGameMapBranched = ({ start, blocks, maxDepth, callback }: 
   }
 
   const _iterate = (position: Vector2, blocks: BlockMatrix, depth: number, actions: Action[], callback: (position: Vector2, actions: Action[]) => boolean) => {
-    for (const action of _traversalActions) {
+    for (const action of _traversalActions.filter((v) => v !== inverseAction(actions[actions.length - 1]))) {
       const newPosition = position.add(actionToVector2(action));
 
       if (depth < _maxDepth && isValidPosition(newPosition) && !callback(newPosition, [...actions, action])) {

@@ -14,6 +14,7 @@ export const resolveCoinIntent: IntentResolver<IPathBlock> = ({ state, player, p
       duration: path.actions.length,
       payoff: Constants.coinPayoff * (player.bonus != null ? 2.0 : 1.0),
       target: path.end,
+      validateSafety: true,
     })
   }
 

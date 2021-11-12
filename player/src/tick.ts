@@ -5,7 +5,7 @@ import { resolveCoinIntent } from "./intents/coin-intent";
 import { resolveDaggerIntent } from "./intents/dagger-intent";
 import { IIntent } from "./intents/intent";
 import { resolveKillIntent } from "./intents/kill-intent";
-import { resolveSafetyIntent } from "./intents/safety-intent";
+import { escapePathsFromPosition, isInDanger, resolveSafetyIntent } from "./intents/safety-intent";
 import { Block, calculateSafetyMatrix, calculateVisibilityMatrix } from "./module";
 import { getDangerousPointsOfInterest, getPointsOfInterest, getPointsOfInterestWithSafety, IPointsOfInterest } from "./pathfinding/poi";
 
@@ -38,10 +38,10 @@ export const getSortedIntents = ({ state, stateHistory, intentHistory }: TickArg
     entities: [...monstersList, ...otherPlayersList],
   };
 
-  console.error('---State---');
-  console.error(`Position: ${player.position.toString()}`);
-  console.error(`Safety: ${safetyMatrix[player.position.y][player.position.x]}`);
-  console.error('-----------');
+  // console.error('---State---');
+  // console.error(`Position: ${player.position.toString()}`);
+  // console.error(`Safety: ${safetyMatrix[player.position.y][player.position.x]}`);
+  // console.error('-----------');
 
   const poi = getPointsOfInterest(poiArgs);
 
@@ -68,15 +68,11 @@ export const getSortedIntents = ({ state, stateHistory, intentHistory }: TickArg
 
   const monsterPois = Object.values(poi.entities).filter((v) => monsterIds.includes(v.target));
 
-  const intents: IIntent[] = [
-    ...resolveSafetyIntent({
-      ...intentArgs,
-      paths: monsterPois,
-    }),
-    ...resolveCoinIntent({
-      ...intentArgs,
-      paths: preferredBlockPoi.blocks.filter((v) => v.target === Block.coin),
-    }),
+  const intents: IIntent[] = [];
+
+  const _isInDanger = isInDanger({ player, position: player.position, safetyMatrix, visibilityMatrix })
+
+  intents.push(
     ...resolveDaggerIntent({
       ...intentArgs,
       paths: [
@@ -84,17 +80,46 @@ export const getSortedIntents = ({ state, stateHistory, intentHistory }: TickArg
         ...safetyPoi.blocks.filter((v) => v.target === Block.dagger),
       ],
     }),
-    ...resolveKillIntent({
+  )
+
+  if (_isInDanger) {
+    intents.push(...resolveSafetyIntent({
       ...intentArgs,
       paths: monsterPois,
-    }),
-    ...resolveBonusIntent({
-      ...intentArgs,
-      paths: preferredBlockPoi.blocks.filter((v) => v.target === Block.bonus),
-    })
-  ];
+    }));
+  }
+  else {
+    intents.push(
+      ...resolveCoinIntent({
+        ...intentArgs,
+        paths: preferredBlockPoi.blocks.filter((v) => v.target === Block.coin),
+      }),
+      ...resolveKillIntent({
+        ...intentArgs,
+        paths: monsterPois,
+      }),
+      ...resolveBonusIntent({
+        ...intentArgs,
+        paths: preferredBlockPoi.blocks.filter((v) => v.target === Block.bonus),
+      })
+    );
+  }
 
-  if (intents.length === 0) {
+  const safeIntents = _isInDanger ? intents : intents.filter((v) => {
+    const escapePaths = escapePathsFromPosition({
+      player,
+      dangers: monstersList.map((v) => v.position),
+      position: player.position,
+      safetyMatrix,
+      state,
+      visibilityMatrix,
+    });
+
+    if (escapePaths == null) return true;
+    return escapePaths.length > 0;
+  });
+
+  if (safeIntents.length === 0) {
     return [
       {
         actions: [Action.stay],
@@ -102,12 +127,13 @@ export const getSortedIntents = ({ state, stateHistory, intentHistory }: TickArg
         certainty: 0,
         duration: 0,
         payoff: 0,
+        validateSafety: false,
       }
     ];
   }
   else {
     // Return the intent with the largest expected payoff
-    return intents.sort((a, b) => {
+    return safeIntents.sort((a, b) => {
       const expectedPayoffA = a.certainty * a.payoff;
       const expectedPayoffB = b.certainty * b.payoff;
 

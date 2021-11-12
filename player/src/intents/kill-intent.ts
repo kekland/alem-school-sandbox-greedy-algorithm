@@ -20,6 +20,7 @@ export const resolveKillIntent: IntentResolver<IPathEntity> = ({ state, paths, p
         duration: monsterPath.actions.length,
         payoff: Constants.killPayoff,
         target: monsterPath.end,
+        validateSafety: false,
       })
     }
   }

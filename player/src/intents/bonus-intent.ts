@@ -20,6 +20,7 @@ export const resolveBonusIntent: IntentResolver<IPathBlock> = ({ state, player, 
       duration: path.actions.length,
       payoff: Constants.bonusPayoff,
       target: path.end,
+      validateSafety: true,
     })
   }
 
