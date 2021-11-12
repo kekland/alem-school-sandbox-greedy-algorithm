@@ -1,0 +1,4 @@
+// Empty!
+export const log = () => {
+
+}
