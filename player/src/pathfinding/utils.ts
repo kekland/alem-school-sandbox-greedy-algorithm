@@ -59,7 +59,7 @@ export const isInMonsterRealm = ({ position, blocks, realms }: { position: Vecto
   return _realms;
 }
 
-type GetPursuersArgs = { realms: MonsterRealms, blocks: BlockMatrix, history: { position: Vector2, monsters: { [id: number]: IMonster } }[] };
+type GetPursuersArgs = { realms: MonsterRealms, blocks: BlockMatrix, history: { position: Vector2, otherPosition?: Vector2, monsters: { [id: number]: IMonster } }[] };
 
 export const getPursuers = ({ blocks, realms, history }: GetPursuersArgs): number[] => {
   if (history.length < 2) return [];
@@ -89,8 +89,15 @@ export const getPursuers = ({ blocks, realms, history }: GetPursuersArgs): numbe
     const frame = history[frameIndex];
     const previousFrame = history[previousFrameIndex];
 
-    const safety = Math.min(8, calcuateSafety({ position: frame.position, blocks: blocks, dangers: [positions[frameIndex]] }));
-    const previousSafety = Math.min(8, calcuateSafety({ position: previousFrame.position, blocks: blocks, dangers: [positions[previousFrameIndex]] }));
+    const otherPlayerPosition = frame.otherPosition;
+
+    const safety = Math.min(8, calcuateSafety({ position: frame.position, blocks, dangers: [positions[frameIndex]] }));
+    const previousSafety = Math.min(8, calcuateSafety({ position: previousFrame.position, blocks, dangers: [positions[previousFrameIndex]] }));
+
+    if (otherPlayerPosition) {
+      const otherSafety = Math.min(8, calcuateSafety({ position: otherPlayerPosition, blocks, dangers: [positions[frameIndex]] }));
+      if (otherSafety < safety) continue;
+    }
 
     const _realms = isInMonsterRealm({ position: previousFrame.position, blocks, realms });
 

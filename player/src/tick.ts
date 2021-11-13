@@ -47,6 +47,7 @@ export const getSortedIntents = ({ state, stateHistory, intentHistory }: TickArg
     blocks: state.map.blocks,
     history: stateHistory.map((v) => ({
       position: v.players[v.playerId].position,
+      otherPosition: Object.values(v.players).find((n) => n.id !== v.playerId)?.position,
       monsters: v.monsters,
     })),
   });
