@@ -6,6 +6,11 @@ export const resolveDaggerIntent: IntentResolver<IPathBlock> = ({ state, player,
   const currentSafety = safetyMatrix[player.position.y][player.position.x];
   const intents: IIntent[] = [];
 
+  // No monsters - no need to pick up a dagger
+  if (Object.keys(state.monsters).length === 0) {
+    return intents;
+  }
+
   for (const path of paths) {
     const blockState = state.map.blockStates.find((v) => v.position.equals(path.end))!;
     const ticksLeft = Constants.daggerLife - (state.tick - blockState.firstTick);
@@ -15,7 +20,7 @@ export const resolveDaggerIntent: IntentResolver<IPathBlock> = ({ state, player,
 
     let isTotallySafe = true;
     simulatePath(path, (i, position) => {
-      if (safetyMatrix[position.y][position.x] <= i + 2) {
+      if (safetyMatrix[position.y][position.x] <= (i + 1) * 2) {
         isTotallySafe = false;
       }
     })

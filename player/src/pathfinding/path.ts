@@ -21,19 +21,21 @@ export interface IPathBlock extends IPath {
 export const isPathBlock = (obj: IPath): obj is IPathBlock => obj.type === 'block';
 
 export interface IPathEntity extends IPath {
-  type: 'entity';
+  type:  'player' | 'monster';
   target: number;
 }
 
 export const isPathEntity = (obj: IPath): obj is IPathEntity => obj.type === 'entity';
 
 
-export const simulatePath = (path: IPath, callback: (i: number, position: Vector2) => void) => {
+export const simulatePath = (path: IPath, callback: (i: number, position: Vector2) => boolean | void) => {
   let currentPosition = path.start;
   let distance = 0;
 
   for (const action of path.actions) {
-    callback(distance, currentPosition);
+    const result = callback(distance, currentPosition);
+
+    if (result) return;
 
     currentPosition = currentPosition.add(actionToVector2(action));
     distance += 1;
@@ -53,6 +55,11 @@ export const getPathSafety = ({ path, safetyMatrix }: { path: IPath, safetyMatri
   })
 
   return safety;
+}
+
+export const isTraversableInOneMove = ({ start, end }: { start: Vector2, end: Vector2 }): boolean => {
+  const delta = end.sub(start);
+  return Math.abs(delta.x) + Math.abs(delta.y) === 1;
 }
 
 type CalculateShortestPathArgs = { start: Vector2, end: Vector2, blocks: BlockMatrix, verticalPriority?: boolean };

@@ -4,6 +4,7 @@ export * from "./game/map";
 export * from "./game/state"
 export * from "./intents/intent";
 export * from "./pathfinding/bfs";
+export * from './pathfinding/poi'
 export * from "./pathfinding/utils";
 export * from "./tick";
 export * from "./utils/vector";

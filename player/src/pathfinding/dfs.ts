@@ -32,5 +32,6 @@ export const iterateOnGameMapBranched = ({ start, blocks, maxDepth, callback }: 
     }
   }
 
+  callback(start, []);
   _iterate(start, blocks, 0, [], callback);
 }

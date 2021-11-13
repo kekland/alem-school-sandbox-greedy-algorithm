@@ -48,6 +48,38 @@ export const IntentDisplay = ({ width, height, position, intent }) => {
     }
 
     context.stroke();
+
+    if (intent.description) {
+      context.strokeStyle = 'rgba(255, 0, 0, 0.15)';
+      context.lineWidth = 4;
+
+
+      const paths = {};
+
+      const historicalPositions = intent.description;
+
+      for (const positions of historicalPositions) {
+        for (const mp of positions) {
+          if (!(positions.indexOf(mp) in paths)) {
+            paths[positions.indexOf(mp)] = [];
+          }
+
+          paths[positions.indexOf(mp)].push(mp);
+        }
+      }
+
+      for (const key in paths) {
+        context.beginPath();
+        context.moveTo(paths[key][0].x * 50 + 24, paths[key][0].y * 50 + 24);
+
+        for (const mp of paths[key]) {
+          context.lineTo(mp.x * 50 + 24, mp.y * 50 + 24);
+        }
+
+        context.stroke();
+      }
+    }
+
   }, [width, height, position, ref, intent])
 
   return (

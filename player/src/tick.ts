@@ -1,12 +1,14 @@
-import { Action } from "./game/action";
+import { Constants } from "./constants";
+import { Action, actionToVector2 } from "./game/action";
 import { IState } from "./game/state";
 import { resolveBonusIntent } from "./intents/bonus-intent";
 import { resolveCoinIntent } from "./intents/coin-intent";
 import { resolveDaggerIntent } from "./intents/dagger-intent";
 import { IIntent } from "./intents/intent";
 import { resolveKillIntent } from "./intents/kill-intent";
-import { escapePathsFromPosition, isInDanger, resolveSafetyIntent } from "./intents/safety-intent";
-import { Block, calculateSafetyMatrix, calculateVisibilityMatrix } from "./module";
+import { escapePathsFromPosition, isDeath, isInDanger, resolveSafetyIntent } from "./intents/safety-intent";
+import { Block, calculateSafetyMatrix, calculateVisibilityMatrix, getPursuers, isInMonsterRealm } from "./module";
+import { simulatePath } from "./pathfinding/path";
 import { getDangerousPointsOfInterest, getPointsOfInterest, getPointsOfInterestWithSafety, IPointsOfInterest } from "./pathfinding/poi";
 
 type TickArgs = { state: IState, stateHistory: IState[], intentHistory: IIntent[] };
@@ -32,16 +34,33 @@ export const getSortedIntents = ({ state, stateHistory, intentHistory }: TickArg
     positions: monstersList.map((v) => v.position),
   })
 
+  const monsterRealms = state.map.monsterRealms;
+
   const poiArgs = {
     start: player.position,
     blocks: state.map.blocks,
     entities: [...monstersList, ...otherPlayersList],
   };
 
-  // console.error('---State---');
-  // console.error(`Position: ${player.position.toString()}`);
-  // console.error(`Safety: ${safetyMatrix[player.position.y][player.position.x]}`);
-  // console.error('-----------');
+  const pursuers = getPursuers({
+    realms: state.map.monsterRealms,
+    blocks: state.map.blocks,
+    history: stateHistory.map((v) => ({
+      position: v.players[v.playerId].position,
+      monsters: v.monsters,
+    })),
+  });
+
+  const _isInDanger = isInDanger({ player, pursuers, blocks: state.map.blocks, position: player.position, monsterRealms, safetyMatrix, visibilityMatrix })
+
+  console.error('---State---');
+  console.error(`Position: ${player.position.toString()}`);
+  console.error(`Danger: ${_isInDanger}`);
+  console.error(`Safety: ${safetyMatrix[player.position.y][player.position.x]}`);
+  console.error(`Dagger: ${player.dagger?.ticksLeft}, Bonus: ${player.bonus?.ticksLeft}`);
+  console.error(`Realms: ${isInMonsterRealm({ position: player.position, blocks: state.map.blocks, realms: monsterRealms })}`);
+  console.error(`Pursuers: ${JSON.stringify(pursuers)}`);
+  console.error('-----------');
 
   const poi = getPointsOfInterest(poiArgs);
 
@@ -49,11 +68,12 @@ export const getSortedIntents = ({ state, stateHistory, intentHistory }: TickArg
     ...poiArgs,
     safetyMatrix: safetyMatrix,
     visibilityMatrix: visibilityMatrix,
+    monsterRealms,
   });
 
   const dangerousPoi = getDangerousPointsOfInterest({ poi, safePoi: safetyPoi });
 
-  const intentArgs = { state, player, safetyMatrix, visibilityMatrix }
+  const intentArgs = { state, player, safetyMatrix, visibilityMatrix, monsterRealms }
 
   let preferredBlockPoi: IPointsOfInterest;
 
@@ -66,11 +86,10 @@ export const getSortedIntents = ({ state, stateHistory, intentHistory }: TickArg
     preferredBlockPoi = poi;
   }
 
-  const monsterPois = Object.values(poi.entities).filter((v) => monsterIds.includes(v.target));
+  // console.error(`${monsterIds} \npos: ${JSON.stringify(monstersList, null, 2)}`);
+  const monsterPois = poi.entities.filter((v) => v.type === 'monster' && monsterIds.includes(v.target));
 
   const intents: IIntent[] = [];
-
-  const _isInDanger = isInDanger({ player, position: player.position, safetyMatrix, visibilityMatrix })
 
   intents.push(
     ...resolveDaggerIntent({
@@ -106,17 +125,44 @@ export const getSortedIntents = ({ state, stateHistory, intentHistory }: TickArg
   }
 
   const safeIntents = _isInDanger ? intents : intents.filter((v) => {
-    const escapePaths = escapePathsFromPosition({
-      player,
-      dangers: monstersList.map((v) => v.position),
-      position: player.position,
-      safetyMatrix,
-      state,
-      visibilityMatrix,
+    if (!v.target) return true;
+
+    let deathIndex = -1;
+
+    let previousSafety = safetyMatrix[player.position.y][player.position.x];
+
+    simulatePath({
+      actions: v.actions,
+      start: player.position,
+      end: v.target,
+      type: 'path'
+    }, (i, position) => {
+      if (player.dagger != null && player.dagger.ticksLeft > 4) return false;
+
+      if (isDeath({ player, position, blocks: state.map.blocks, monsterRealms, safetyMatrix })) {
+        return true;
+      }
+
+      const _relevantRealms = isInMonsterRealm({ position, blocks: state.map.blocks, realms: monsterRealms })
+
+      for (const realm of _relevantRealms) {
+        const _safetyMatrixWithRelevantRealm = calculateSafetyMatrix({
+          blocks: state.map.blocks, dangers: [state.monsters[realm].position]
+        })
+
+        const safety = _safetyMatrixWithRelevantRealm[position.y][position.x]
+
+        const multiplier = safety >= previousSafety ? 1 : 2;
+        previousSafety = safety;
+
+        if (safety < (i + 1) * multiplier) {
+          deathIndex = i;
+          return true;
+        }
+      }
     });
 
-    if (escapePaths == null) return true;
-    return escapePaths.length > 0;
+    return deathIndex === -1 || deathIndex > 1;
   });
 
   if (safeIntents.length === 0) {
@@ -147,7 +193,7 @@ export const getSortedIntents = ({ state, stateHistory, intentHistory }: TickArg
 
 export const tick = (args: TickArgs): IIntent => {
   const intents = getSortedIntents(args);
-  console.error(intents.slice(0, 5));
+  console.error(JSON.stringify(intents.slice(0, 3), null, 2));
 
   return intents[0]
 }

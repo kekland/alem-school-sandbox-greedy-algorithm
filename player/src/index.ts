@@ -10,7 +10,9 @@ while (true) {
     const state = getState({ history: stateHistory });
 
     const intent = tick({ state, stateHistory, intentHistory });
+
     console.log(intent.actions[0]);
+    console.error(intent.actions[0]);
 
     stateHistory.push(state);
     intentHistory.push(intent);

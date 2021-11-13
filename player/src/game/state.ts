@@ -1,8 +1,10 @@
 import { Vector2 } from "../utils/vector"
 import { IMonster, IPlayer, IPowerupState } from "./entity"
-import { Block, BlockMatrix, IBlockState, IMap, stringToBlock } from "./map"
+import { Block, BlockMatrix, IBlockState, IMap, MonsterRealms, stringToBlock } from "./map"
 import getnextline from 'getnextline'
 import { Constants } from "../constants"
+import { isTraversableInOneMove } from "../pathfinding/path"
+import { isInMonsterRealm } from "../module"
 
 export interface IState {
   tick: number;
@@ -43,18 +45,51 @@ export const getState = ({ history }: { history: IState[] }): IState => {
     const param1 = parseInt(line[4]);
     const param2 = parseInt(line[5]);
 
+    const position = new Vector2(x, y)
+
     if (ent_type === 'm') {
-      monsters[i] = {
+      let id = i;
+
+      if (oldState) {
+        let sameOldMonsters = Object.values(oldState.monsters).filter((v) => v.position.equals(position));
+
+        if (sameOldMonsters.length === 1) {
+          id = sameOldMonsters[0].id;
+        }
+        else {
+          let oldMonsters = Object.values(oldState.monsters).filter((v) => isTraversableInOneMove({
+            start: v.position, end: position,
+          }))
+
+          if (oldMonsters.length !== 1) {
+            console.error(`${i} index failure monsters len > 1:`, position, oldMonsters)
+            oldMonsters = oldMonsters.filter((v) => isInMonsterRealm({
+              position,
+              realms: oldState.map.monsterRealms,
+              blocks,
+            }).includes(v.id))
+          }
+
+          if (oldMonsters.length === 1) {
+            id = oldMonsters[0].id
+          }
+          else {
+            console.error(`${i} critical failure len > 1:`, position, oldMonsters)
+          }
+        }
+      }
+
+      monsters[id] = {
+        id,
         type: 'monster',
-        id: i,
-        position: new Vector2(x, y),
+        position,
       };
     }
     else if (ent_type === 'p') {
       const player: IPlayer = {
         type: 'player',
         id: p_id,
-        position: new Vector2(x, y),
+        position: position,
         dagger: null,
         bonus: null,
       };
@@ -109,6 +144,20 @@ export const getState = ({ history }: { history: IState[] }): IState => {
     }
   }
 
+  let monsterRealms: MonsterRealms;
+  if (oldState) {
+    monsterRealms = Object.fromEntries(
+      Object.entries(oldState.map.monsterRealms)
+        .filter((v) => Object.keys(monsters).includes(v[0]))
+    );
+  }
+  else {
+    monsterRealms = {};
+    for (const monster of Object.values(monsters)) {
+      monsterRealms[monster.id] = monster.position;
+    }
+  }
+
   return {
     tick,
     playerId,
@@ -119,6 +168,7 @@ export const getState = ({ history }: { history: IState[] }): IState => {
       height,
       blocks,
       blockStates,
+      monsterRealms,
     },
   }
 }

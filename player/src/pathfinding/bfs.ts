@@ -14,7 +14,7 @@ type IterateOnGameMapArgs = {
 }
 
 export const iterateOnGameMap = ({ start, blocks, maxDepth, callback, verticalPriority }: IterateOnGameMapArgs) => {
-  const _maxDepth = maxDepth ?? 1000;
+  const _maxDepth = maxDepth ?? 10000;
 
   const visited: boolean[][] = []
 

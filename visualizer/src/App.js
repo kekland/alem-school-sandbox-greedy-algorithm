@@ -1,9 +1,10 @@
-import { Block, calculateSafetyMatrix, calculateVisibilityMatrix, getSortedIntents, Vector2 } from 'player';
+import { Block, calculateSafetyMatrix, calculateVisibilityMatrix, getSortedIntents, Vector2, getPointsOfInterest, getPointsOfInterestWithSafety, getDangerousPointsOfInterest } from 'player';
 import React, { useEffect, useState } from 'react';
 import { Grid } from './components/Grid';
 import { Brushes } from './components/Brushes';
 import { Params } from './components/Params';
 import { IntentList } from './components/IntentList';
+import { MonsterControls } from './components/MonsterControls';
 
 const width = 13;
 const height = 11;
@@ -97,6 +98,7 @@ const App = () => {
   const [blockMatrix, setBlockMatrix] = useState(generateEmptyBlockMatrix())
   const [player, setPlayer] = useState(createDefaultPlayerEntity())
   const [monsters, setMonsters] = useState([])
+  const [activeMonsterId, setActiveMonsterId] = useState(null)
   const [brush, setBrush] = useState(Block.empty);
   const [params, setParams] = useState(createDefaultParams())
   const [actingIntent, setActingIntent] = useState(null);
@@ -106,6 +108,7 @@ const App = () => {
   useEffect(() => {
     const _handleKeyDown = (event) => {
       let direction;
+      let isMonster = false;
       switch (event.keyCode) {
         case 87: // w
           direction = new Vector2(0, -1);
@@ -119,18 +122,47 @@ const App = () => {
         case 68: // d
           direction = new Vector2(1, 0);
           break;
+        case 37: // left
+          isMonster = true;
+          direction = new Vector2(-1, 0);
+          break;
+        case 38: // up
+          isMonster = true;
+          direction = new Vector2(0, -1);
+          break;
+        case 39: // right
+          isMonster = true;
+          direction = new Vector2(1, 0);
+          break;
+        case 40: // down
+          isMonster = true;
+          direction = new Vector2(0, 1);
+          break;
         default:
           break;
       }
 
       if (!direction) return;
 
-      setPlayer((player) => movePlayerEntity(player, blockMatrix, setBlockMatrix, params, setParams, direction));
+      if (isMonster) {
+        if (activeMonsterId) {
+          setMonsters(monsters.map((monster) => {
+            if (monster.id === activeMonsterId) {
+              monster.position = monster.position.add(direction);
+            }
+
+            return monster;
+          }));
+        }
+      }
+      else {
+        setPlayer((player) => movePlayerEntity(player, blockMatrix, setBlockMatrix, params, setParams, direction));
+      }
     }
 
     document.addEventListener('keydown', _handleKeyDown);
     return () => document.removeEventListener('keydown', _handleKeyDown);
-  }, [blockMatrix, params])
+  }, [blockMatrix, params, activeMonsterId])
 
   const onBrushUsed = (x, y) => {
     if (brush === 'monster') {
@@ -138,6 +170,7 @@ const App = () => {
       if (monster != null) {
         const index = monsters.indexOf(monster);
         setMonsters([...monsters.slice(0, index), ...monsters.slice(index + 1)]);
+        setActiveMonsterId(monsters[0]?.id);
       }
       else {
         setMonsters([
@@ -145,9 +178,11 @@ const App = () => {
             type: 'monster',
             id: currentId,
             position: new Vector2(x, y),
+            initialPosition: new Vector2(x, y),
           },
         ])
-        currentId += 1;
+        setActiveMonsterId(currentId);
+        currentId += 2;
       }
     }
     else {
@@ -161,6 +196,8 @@ const App = () => {
     _monsters[monster.id] = monster;
   }
 
+  const monsterRealms = Object.fromEntries(monsters.map((v) => [v.id, v.initialPosition]))
+
   const state = {
     tick: 0,
     playerId: 1,
@@ -169,6 +206,7 @@ const App = () => {
       height,
       blocks: blockMatrix,
       blockStates: getBlockStates(blockMatrix),
+      monsterRealms,
     },
     players: {
       [player.id]: {
@@ -183,7 +221,25 @@ const App = () => {
   const intents = getSortedIntents({ state, intentHistory: [], stateHistory: [] });
   const dangers = monsters.map((v) => v.position);
   const safetyMatrix = calculateSafetyMatrix({ blocks: blockMatrix, dangers });
-  const visibilityMatrix = calculateVisibilityMatrix({ positions: dangers, blocks: blockMatrix });
+  const visibilityMatrix = calculateVisibilityMatrix({ positions: monsters.map((v) => v.initialPosition), blocks: blockMatrix });
+
+
+  const poiArgs = {
+    start: player.position,
+    blocks: state.map.blocks,
+    entities: [...monsters],
+  };
+
+  const poi = getPointsOfInterest(poiArgs);
+
+  const safetyPoi = getPointsOfInterestWithSafety({
+    ...poiArgs,
+    safetyMatrix: safetyMatrix,
+    visibilityMatrix: visibilityMatrix,
+    monsterRealms,
+  });
+
+  const dangerousPoi = getDangerousPointsOfInterest({ poi, safePoi: safetyPoi });
 
   useEffect(() => {
     const intents = getSortedIntents({ state, intentHistory: [], stateHistory: [] });
@@ -202,11 +258,22 @@ const App = () => {
           visibilityMatrix={visibilityMatrix}
           player={player}
           entities={entities}
+          monsters={monsters}
+          monsterRealms={monsterRealms}
           actingIntent={actingIntent}
+          poi={poi}
+          safetyPoi={safetyPoi}
+          dangerousPoi={dangerousPoi}
           onTap={onBrushUsed}
         />
         <div style={{ height: 12 }} />
         <Params params={params} onChanged={setParams} />
+        <div style={{ height: 12 }} />
+        <MonsterControls
+          monsters={monsters}
+          activeMonsterId={activeMonsterId}
+          onChanged={setActiveMonsterId}
+        />
       </div>
     </>
   )

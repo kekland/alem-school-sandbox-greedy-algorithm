@@ -42,10 +42,12 @@ export interface IBlockState {
 }
 
 export type BlockMatrix = Block[][];
+export type MonsterRealms = { [id: number]: Vector2 };
 
 export interface IMap {
   width: number;
   height: number;
   blocks: BlockMatrix;
   blockStates: IBlockState[];
+  monsterRealms: { [id: number]: Vector2 };
 }
