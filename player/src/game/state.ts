@@ -61,13 +61,9 @@ export const getState = ({ history }: { history: IState[] }): IState => {
             start: v.position, end: position,
           }))
 
-          if (oldMonsters.length !== 1) {
+          if (oldMonsters.length === 2) {
             console.error(`${i} index failure monsters len > 1:`, position, oldMonsters)
-            oldMonsters = oldMonsters.filter((v) => isInMonsterRealm({
-              position,
-              realms: oldState.map.monsterRealms,
-              blocks,
-            }).includes(v.id))
+            oldMonsters = [oldMonsters.find((v) => v.position.equals(position))!]
           }
 
           if (oldMonsters.length === 1) {
