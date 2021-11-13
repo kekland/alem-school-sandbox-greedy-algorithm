@@ -152,7 +152,7 @@ export const escapePathsFromPosition = ({ position, player, state, dangers, mons
       for (const id of _relevantMonsterPositions) {
         const monsterPosition = _monsterPositions[id];
 
-        const _traversalActions = [Action.down, Action.right, Action.left, Action.up];
+        const _traversalActions = [Action.left, Action.right, Action.up, Action.down];
 
         // const delta = monsterPosition.sub(playerPosition);
 
@@ -193,12 +193,14 @@ export const escapePathsFromPosition = ({ position, player, state, dangers, mons
 
         let minSafety: number = Infinity;
         let minAction: Action;
+
+        const actionSafety: { [action: string]: number } = {}
         for (const action of _traversalActions) {
           const newMonsterPosition = monsterPosition.add(actionToVector2(action));
 
           if (!isValidPosition(newMonsterPosition)) continue;
 
-          let _maxSafety = calcuateSafety({ blocks: state.map.blocks, dangers: [newMonsterPosition], position: playerPosition })
+          let safety = calcuateSafety({ blocks: state.map.blocks, dangers: [newMonsterPosition], position: playerPosition })
 
           // for (const playerAction of _traversalActions) {
           //   const newPlayerPosition = playerPosition.add(actionToVector2(playerAction));
@@ -216,11 +218,16 @@ export const escapePathsFromPosition = ({ position, player, state, dangers, mons
           //   }
           // }
 
-          if (_maxSafety < minSafety) {
-            minSafety = _maxSafety;
+          actionSafety[action] = safety
+
+          if (safety < minSafety) {
+            minSafety = safety;
             minAction = action;
           }
-          else if (_maxSafety == minSafety) {
+        }
+
+        for (const action in actionSafety) {
+          if (actionSafety[action] === minSafety) {
             possibleActionCount += 1;
           }
         }
@@ -243,7 +250,7 @@ export const escapePathsFromPosition = ({ position, player, state, dangers, mons
       let probabilityMultiplier = 1.0;
 
       // Death!
-      if (safety <= 1) {
+      if (safety === 0) {
         return true;
       }
 
