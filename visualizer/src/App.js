@@ -114,7 +114,31 @@ const App = () => {
   const [actingIntent, setActingIntent] = useState(null);
   const [replayData, setReplayData] = useState(null);
   const [replayFrame, setReplayFrame] = useState(null);
+  const [autoplayEnabled, setAutoplayEnabled] = useState(false);
   const [scores, setScores] = useState({});
+
+  useEffect(() => {
+    let id;
+
+    const loop = () => {
+      if (autoplayEnabled) {
+        if (replayFrame === replayData.frames.length) {
+          setAutoplayEnabled(false);
+          return;
+        }
+        else {
+          setReplayFrame((v) => v + 1);
+        }
+      }
+      id = setTimeout(loop, 500)
+    }
+
+    if (autoplayEnabled) {
+      id = setTimeout(loop, 500)
+    }
+
+    return () => id ? clearTimeout(id) : null
+  }, [autoplayEnabled, replayFrame, replayData])
 
   useEffect(() => {
     if (!replayData || replayFrame == null) {
@@ -363,6 +387,8 @@ const App = () => {
           replayFrame={replayFrame}
           setReplayData={setReplayData}
           setReplayFrame={setReplayFrame}
+          autoplayEnabled={autoplayEnabled}
+          setAutoplayEnabled={setAutoplayEnabled}
           scores={scores}
         />
       </div>
