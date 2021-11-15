@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import Plot from 'react-plotly.js';
 import './App.css';
 
 const fetchData = async () => {
@@ -367,7 +367,7 @@ function App() {
 
   useEffect(() => {
     fetchData().then((response) => {
-      const gameTimeDelta = 6 * 60 * 60;
+      // const gameTimeDelta = 6 * 60 * 60;
 
       const newData = []
       const newTeams = {}
@@ -383,8 +383,7 @@ function App() {
         }
 
         for (const game of teamData.games) {
-          console.log(game.time)
-          const time = new Date(new Date(game.time).getTime() + gameTimeDelta).getTime()
+          const time = new Date(game.time)
 
           if (time < oldestTime || oldestTime === undefined) {
             oldestTime = time
@@ -398,70 +397,54 @@ function App() {
       let time = new Date(oldestTime)
       let i = 0;
 
-      while (true) {
-        newData.push({ t: time.getTime(), tString: time.toString(), i })
+      for (const team in response) {
+        const teamData = response[team]
+        const d = {
+          x: [],
+          y: [],
+          name: teamData.players.map((v) => v.username).join(', ')
+        }
 
-        for (const team in response) {
-          const teamData = response[team]
-
+        while (true) {
           for (const game of teamData.games) {
-            const gameTime = new Date(new Date(game.time).getTime() + gameTimeDelta)
+            const gameTime = new Date(game.time)
 
             if (areTimesClose(gameTime.getTime(), time.getTime())) {
-              newData[newData.length - 1][team] = game.rating;
+              d.x.push(i)
+              d.y.push(game.rating)
             }
+          }
+
+          time = new Date(time.getTime() + 15 * 60 * 1000);
+          i += 1
+
+          if (time.getTime() >= Date.now()) {
+            time = new Date(oldestTime);
+            i = 0;
+            break;
           }
         }
 
-        time = new Date(time.getTime() + 15 * 60 * 1000);
-        i += 1
-
-        if (time.getTime() > Date.now()) {
-          break;
-        }
+        newData.push(d)
       }
+      
 
-      console.log(newData)
-      setData(newData)
+      // console.log(newData)
+      setData(newData.map)
       setTeams(newTeams)
-      setActiveTeamIds(['221'])
+      setActiveTeamIds('221')
     })
   }, [])
 
   const renderLineChart = (
-    <LineChart width={window.innerWidth - 64} height={window.innerHeight - 64} data={data}>
-      <XAxis dataKey="i" />
-      <YAxis />
-      <CartesianGrid stroke={'#373737'} />
-      <Tooltip labelFormatter={(i) => new Date(data[i].t).toLocaleString()} />
-      <Legend />
-      {
-        activeTeamIds.map((teamId, i) => <Line name={teams[teamId].name} type="monotone" dataKey={teamId} stroke={colors[i]} dot={false} activeDot={false} />)
-      }
-
-    </LineChart>
+    <Plot data={data} layout={{
+      width: window.innerWidth - 64.0, height: window.innerHeight - 64.0,
+    }} />
   );
 
   return (
     <div className="App">
       {renderLineChart}
-      <div style={{ height: 16 }} />
-      {
-        Object.values(teams).map((v) => {
-          return (
-            <>
-              <input type="checkbox" checked={activeTeamIds.includes(v.id)} onClick={() => {
-                if (activeTeamIds.includes(v.id)) {
-                  setActiveTeamIds(activeTeamIds.filter((id) => id !== v.id))
-                } else {
-                  setActiveTeamIds([...activeTeamIds, v.id].sort())
-                }
-              }} />
-              <label>{v.id}: {v.name}</label> <span>&nbsp;&nbsp;</span>
-            </>
-          )
-        })
-      }
     </div>
   );
 }

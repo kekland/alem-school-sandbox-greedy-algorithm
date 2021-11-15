@@ -26,7 +26,7 @@ const fillTeamGames = async (teamId) => {
 
       data[teamId].games.push({
         id: game.id,
-        time: game.created_at,
+        time: new Date(new Date(game.created_at).getTime() + 6 * 60 * 60 * 1000),
         status: game.game_status,
         pointDelta: game.delta,
         enemyId: game.enemy_team_id,
