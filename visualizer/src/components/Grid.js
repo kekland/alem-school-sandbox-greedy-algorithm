@@ -1,5 +1,6 @@
 import React from 'react'
 import { BlockComponent } from './Block';
+import { EntityComponent } from './EntityComponent';
 import { IntentDisplay } from './IntentDisplay';
 import { MonsterRealmDisplay } from './MonsterRealmDisplay';
 
@@ -8,6 +9,7 @@ const _height = 11;
 
 export const Grid = ({ blockMatrix, safetyMatrix, visibilityMatrix, player, actingIntent, entities, monsterRealms, monsters, onTap, poi, safetyPoi, dangerousPoi }) => {
   const blocks = [];
+  const _entities = [];
 
   for (let y = 0; y < _height; y++) {
     for (let x = 0; x < _width; x++) {
@@ -20,13 +22,31 @@ export const Grid = ({ blockMatrix, safetyMatrix, visibilityMatrix, player, acti
           safety={safetyMatrix ? safetyMatrix[y][x] : Number.MAX_SAFE_INTEGER}
           visibility={visibilityMatrix ? visibilityMatrix[y][x] : false}
           isTargeted={actingIntent && actingIntent.target.x === x && actingIntent.target.y === y}
-          entities={entities.filter(entity => entity.position.x === x && entity.position.y === y)}
-          monsterRealm={Object.values(monsterRealms).filter(realm => realm.x === x && realm.y === y)}
           poi={_safetyPoi.length > 0 ? 'safety' : (_poi.length > 0 ? 'dangerous' : null)}
           onChange={() => onTap(x, y)}
           key={`${x}-${y}`}
         />
       );
+
+      const e = entities.filter(entity => entity.position.x === x && entity.position.y === y)
+      const r = Object.values(monsterRealms).filter(realm => realm.x === x && realm.y === y)
+
+      if (e.length > 0 || r.length > 0) {
+        const key = e.length > 0? e.map((v) => `${v.type}-${v.id}`).join(',') : r.join(',')
+  
+        _entities.push(
+          <EntityComponent
+            key={key}
+            style={{
+              position: 'absolute',
+              transform: `translate(${x * 50}px, ${y * 50}px)`,
+              transition: 'all 0.15s ease-out'
+            }}
+            entities={e}
+            monsterRealm={r}
+          />
+        )
+      }
     }
   }
 
@@ -38,6 +58,7 @@ export const Grid = ({ blockMatrix, safetyMatrix, visibilityMatrix, player, acti
       <div className='grid' style={{ position: 'absolute' }}>
         {blocks}
       </div>
+      {_entities}
       <div className='grid-canvas' style={{ width: width, height: height }}>
         <IntentDisplay width={width} height={height} position={player.position} intent={actingIntent} />
       </div>
