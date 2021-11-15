@@ -14,7 +14,7 @@ export const MonsterRealmDisplay = ({ width, height, monsters, monsterRealms }) 
       const newPosition = monster.position;
 
 
-      context.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      context.strokeStyle = 'rgba(255, 255, 255, 0.05)';
       context.lineWidth = 4;
 
       context.beginPath();

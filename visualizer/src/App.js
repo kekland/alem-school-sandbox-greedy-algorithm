@@ -5,6 +5,8 @@ import { Brushes } from './components/Brushes';
 import { Params } from './components/Params';
 import { IntentList } from './components/IntentList';
 import { MonsterControls } from './components/MonsterControls';
+import { ReplayPanel } from './components/ReplayPanel';
+import { getReplayData, getStateFromReplayFrame } from './replay-parser';
 
 const width = 13;
 const height = 11;
@@ -62,6 +64,14 @@ const createDefaultPlayerEntity = () => ({
   bonus: false,
 })
 
+const createOtherPlayerEntity = () => ({
+  type: 'player-other',
+  id: 2,
+  position: new Vector2(12, 10),
+  dagger: false,
+  bonus: false,
+})
+
 const createDefaultParams = () => ({
   dagger: false,
   bonus: false,
@@ -93,22 +103,63 @@ const movePlayerEntity = (entity, blockMatrix, setBlockMatrix, params, setParams
   }
 }
 
-let currentId = 2;
 const App = () => {
   const [blockMatrix, setBlockMatrix] = useState(generateEmptyBlockMatrix())
   const [player, setPlayer] = useState(createDefaultPlayerEntity())
+  const [otherPlayer, setOtherPlayer] = useState(createOtherPlayerEntity())
   const [monsters, setMonsters] = useState([])
   const [activeMonsterId, setActiveMonsterId] = useState(null)
   const [brush, setBrush] = useState(Block.empty);
   const [params, setParams] = useState(createDefaultParams())
   const [actingIntent, setActingIntent] = useState(null);
+  const [replayData, setReplayData] = useState(null);
+  const [replayFrame, setReplayFrame] = useState(null);
+  const [scores, setScores] = useState(null);
 
-  const entities = [player, ...monsters]
+  useEffect(() => {
+    if (!replayData || replayFrame == null) {
+      setBlockMatrix(generateEmptyBlockMatrix());
+      setPlayer(createDefaultPlayerEntity());
+      setOtherPlayer(createOtherPlayerEntity());
+      setMonsters([]);
+      setActiveMonsterId(null);
+      setParams(createDefaultParams());
+
+      return;
+    }
+
+    const state = getStateFromReplayFrame(replayData, replayFrame);
+    const player = state.players[state.playerId]
+
+    const _monsters = Object.values(state.monsters)
+
+    setBlockMatrix(state.map.blocks)
+    setPlayer({
+      ...state.players[state.playerId],
+    })
+
+    if (Object.values(state.players).length > 1) {
+      setOtherPlayer({
+        ...Object.values(state.players).find((v) => v.id !== state.playerId),
+        type: 'player-other'
+      })
+    }
+
+    setMonsters(_monsters.map((v) => ({ ...v, initialPosition: state.map.monsterRealms[v.id] })))
+    setActiveMonsterId(_monsters.length > 0 ? _monsters[_monsters.length - 1].id : 0)
+    setParams({ dagger: player.dagger != null, bonus: player.bonus != null })
+    setScores(state.scores)
+
+    console.log(state)
+  }, [replayData, replayFrame])
+
+  const entities = [player, otherPlayer, ...monsters]
 
   useEffect(() => {
     const _handleKeyDown = (event) => {
       let direction;
       let isMonster = false;
+      let isOtherPlayer = false;
       switch (event.keyCode) {
         case 87: // w
           direction = new Vector2(0, -1);
@@ -123,20 +174,36 @@ const App = () => {
           direction = new Vector2(1, 0);
           break;
         case 37: // left
-          isMonster = true;
+          isOtherPlayer = true;
           direction = new Vector2(-1, 0);
           break;
         case 38: // up
-          isMonster = true;
+          isOtherPlayer = true;
           direction = new Vector2(0, -1);
           break;
         case 39: // right
-          isMonster = true;
+          isOtherPlayer = true;
           direction = new Vector2(1, 0);
           break;
         case 40: // down
-          isMonster = true;
+          isOtherPlayer = true;
           direction = new Vector2(0, 1);
+          break;
+        case 73: // i
+          isMonster = true
+          direction = new Vector2(0, -1);
+          break;
+        case 74: // j
+          isMonster = true
+          direction = new Vector2(-1, 0);
+          break;
+        case 75: // k
+          isMonster = true
+          direction = new Vector2(0, 1);
+          break;
+        case 76: // l
+          isMonster = true
+          direction = new Vector2(1, 0);
           break;
         default:
           break;
@@ -155,7 +222,12 @@ const App = () => {
           }));
         }
       }
-      else {
+      else if (isOtherPlayer) {
+        setOtherPlayer((player) => player ?
+          movePlayerEntity(player, blockMatrix, setBlockMatrix, params, setParams, direction) :
+          null
+        );
+      } else {
         setPlayer((player) => movePlayerEntity(player, blockMatrix, setBlockMatrix, params, setParams, direction));
       }
     }
@@ -176,13 +248,12 @@ const App = () => {
         setMonsters([
           ...monsters, {
             type: 'monster',
-            id: currentId,
+            id: monsters.length + 5,
             position: new Vector2(x, y),
             initialPosition: new Vector2(x, y),
           },
         ])
-        setActiveMonsterId(currentId);
-        currentId += 2;
+        setActiveMonsterId(monsters.length + 5);
       }
     }
     else {
@@ -200,7 +271,7 @@ const App = () => {
 
   const state = {
     tick: 0,
-    playerId: 1,
+    playerId: player.id,
     map: {
       width,
       height,
@@ -213,6 +284,11 @@ const App = () => {
         ...player,
         dagger: params.dagger ? { firstTick: 0, ticksLeft: 15 } : null,
         bonus: params.bonus ? { firstTick: 0, ticksLeft: 15 } : null,
+      },
+      [otherPlayer.id]: {
+        ...otherPlayer,
+        type: 'player',
+        id: otherPlayer.id,
       }
     },
     monsters: _monsters,
@@ -221,8 +297,15 @@ const App = () => {
   const intents = getSortedIntents({ state, intentHistory: [], stateHistory: [] });
   const dangers = monsters.map((v) => v.position);
   const safetyMatrix = calculateSafetyMatrix({ blocks: blockMatrix, dangers });
-  const visibilityMatrix = calculateVisibilityMatrix({ positions: monsters.map((v) => v.initialPosition), blocks: blockMatrix });
+  const visibilityMatrix = []
 
+  const initialSafetyMatrix = calculateSafetyMatrix({ blocks: blockMatrix, dangers: monsters.map((v) => v.initialPosition) })
+  for (let i = 0; i < initialSafetyMatrix.length; i++) {
+    visibilityMatrix.push([])
+    for (let j = 0; j < initialSafetyMatrix[i].length; j++) {
+      visibilityMatrix[i].push(initialSafetyMatrix[i][j] <= 4)
+    }
+  }
 
   const poiArgs = {
     start: player.position,
@@ -273,6 +356,14 @@ const App = () => {
           monsters={monsters}
           activeMonsterId={activeMonsterId}
           onChanged={setActiveMonsterId}
+        />
+        <div style={{ height: 12 }} />
+        <ReplayPanel
+          replayData={replayData}
+          replayFrame={replayFrame}
+          setReplayData={setReplayData}
+          setReplayFrame={setReplayFrame}
+          scores={scores}
         />
       </div>
     </>
