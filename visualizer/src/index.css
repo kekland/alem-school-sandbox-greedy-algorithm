@@ -74,6 +74,10 @@ button {
   padding: 4px 12px;
 }
 
+button:hover {
+  filter: brightness(120%);
+}
+
 button.selected {
   background-color: #7a0335;
 }
@@ -96,4 +100,21 @@ button.active {
   height: calc(100vh - 32px);
   overflow-y: scroll;
   padding-right: 16px;
+}
+
+input {
+  background-color: #363636;
+  border: 0;
+  border-radius: 2px;
+  color: #bababa;
+  padding: 4px 12px;
+}
+
+input:focus {
+  filter: brightness(120%);
+}
+
+.caption {
+  font-size: 12px;
+  color: #787878;
 }
