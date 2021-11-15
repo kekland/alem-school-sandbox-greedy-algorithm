@@ -31,7 +31,7 @@ export const BlockComponent = ({ block, safety, visibility, poi, onChange }) => 
     >
       <div style={{ width: 48, height: 48, backgroundColor: poi ? (poi === 'safety' ? 'green' : 'red') : null, opacity: 0.2 }} />
       <div style={{ width: 48, height: 48, backgroundColor, opacity: 0.1 }} />
-      <div style={{ width: 48, height: 48, backgroundColor: 'white', opacity: visibility ? 0.2 : 0.0 }} />
+      <div style={{ width: 48, height: 48, backgroundColor: 'white', opacity: visibility ? 0.1 : 0.0 }} />
       <div style={{ opacity: 0.35, color: 'black' }}>
         {backgroundColor != null ? safety : null}
       </div>

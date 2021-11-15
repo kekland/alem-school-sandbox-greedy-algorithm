@@ -1,7 +1,7 @@
 import React, { useRef } from 'react'
 import { getReplayData } from '../replay-parser'
 
-export const ReplayPanel = ({ replayData, replayFrame, scores, autoplayEnabled, setAutoplayEnabled, setReplayData, setReplayFrame }) => {
+export const ReplayPanel = ({ replayData, replayFrame, scores, autoplayEnabled, setAutoplayEnabled, toggleAiPredictions, setReplayData, setReplayFrame }) => {
   const inputRef = useRef()
 
   const isReplayFrameValid = (n) => {
@@ -28,7 +28,8 @@ export const ReplayPanel = ({ replayData, replayFrame, scores, autoplayEnabled, 
         setReplayFrame(0);
         setReplayData(data);
         setAutoplayEnabled(false);
-      }}>Load</button>
+      }}>Load</button> &nbsp;
+      <button onClick={toggleAiPredictions}>Toggle intent display</button>
       {
         replayData ? <div style={{ marginTop: 12 }}>
           <button onClick={() => diffReplayFrame(-1)}>-1</button>
