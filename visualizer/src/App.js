@@ -114,7 +114,7 @@ const App = () => {
   const [actingIntent, setActingIntent] = useState(null);
   const [replayData, setReplayData] = useState(null);
   const [replayFrame, setReplayFrame] = useState(null);
-  const [scores, setScores] = useState(null);
+  const [scores, setScores] = useState({});
 
   useEffect(() => {
     if (!replayData || replayFrame == null) {
