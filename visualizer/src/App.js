@@ -115,6 +115,7 @@ const App = () => {
   const [replayData, setReplayData] = useState(null);
   const [replayFrame, setReplayFrame] = useState(null);
   const [autoplayEnabled, setAutoplayEnabled] = useState(false);
+  const [aiPredictionEnabled, setAiPredictionEnabled] = useState(true);
   const [scores, setScores] = useState({});
 
   useEffect(() => {
@@ -366,6 +367,7 @@ const App = () => {
           safetyPoi={safetyPoi}
           dangerousPoi={dangerousPoi}
           onTap={onBrushUsed}
+          aiPredictionEnabled={aiPredictionEnabled}
         />
         <div style={{ height: 12 }} />
         <Params params={params} onChanged={setParams} />
@@ -383,6 +385,7 @@ const App = () => {
           setReplayFrame={setReplayFrame}
           autoplayEnabled={autoplayEnabled}
           setAutoplayEnabled={setAutoplayEnabled}
+          toggleAiPredictions={() => setAiPredictionEnabled(!aiPredictionEnabled)}
           scores={scores}
         />
       </div>

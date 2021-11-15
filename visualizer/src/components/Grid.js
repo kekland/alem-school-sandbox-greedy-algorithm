@@ -7,7 +7,7 @@ import { MonsterRealmDisplay } from './MonsterRealmDisplay';
 const _width = 13;
 const _height = 11;
 
-export const Grid = ({ blockMatrix, safetyMatrix, visibilityMatrix, player, actingIntent, entities, monsterRealms, monsters, onTap, poi, safetyPoi, dangerousPoi }) => {
+export const Grid = ({ blockMatrix, safetyMatrix, visibilityMatrix, player, actingIntent, entities, aiPredictionEnabled, monsterRealms, monsters, onTap, poi, safetyPoi, dangerousPoi }) => {
   const blocks = [];
   const _entities = [];
 
@@ -21,8 +21,8 @@ export const Grid = ({ blockMatrix, safetyMatrix, visibilityMatrix, player, acti
           block={blockMatrix[y][x]}
           safety={safetyMatrix ? safetyMatrix[y][x] : Number.MAX_SAFE_INTEGER}
           visibility={visibilityMatrix ? visibilityMatrix[y][x] : false}
-          isTargeted={actingIntent && actingIntent.target.x === x && actingIntent.target.y === y}
-          poi={_safetyPoi.length > 0 ? 'safety' : (_poi.length > 0 ? 'dangerous' : null)}
+          isTargeted={aiPredictionEnabled && actingIntent && actingIntent.target.x === x && actingIntent.target.y === y}
+          poi={aiPredictionEnabled? (_safetyPoi.length > 0 ? 'safety' : (_poi.length > 0 ? 'dangerous' : null)) : null}
           onChange={() => onTap(x, y)}
           key={`${x}-${y}`}
         />
@@ -32,8 +32,8 @@ export const Grid = ({ blockMatrix, safetyMatrix, visibilityMatrix, player, acti
       const r = Object.values(monsterRealms).filter(realm => realm.x === x && realm.y === y)
 
       if (e.length > 0 || r.length > 0) {
-        const key = e.length > 0? e.map((v) => `${v.type}-${v.id}`).join(',') : r.join(',')
-  
+        const key = e.length > 0 ? e.map((v) => `${v.type}-${v.id}`).join(',') : r.join(',')
+
         _entities.push(
           <EntityComponent
             key={key}
@@ -59,9 +59,11 @@ export const Grid = ({ blockMatrix, safetyMatrix, visibilityMatrix, player, acti
         {blocks}
       </div>
       {_entities}
-      <div className='grid-canvas' style={{ width: width, height: height }}>
-        <IntentDisplay width={width} height={height} position={player.position} intent={actingIntent} />
-      </div>
+      {aiPredictionEnabled &&
+        <div className='grid-canvas' style={{ width: width, height: height }}>
+          <IntentDisplay width={width} height={height} position={player.position} intent={actingIntent} />
+        </div>
+      }
       <div className='grid-canvas' style={{ width: width, height: height }}>
         <MonsterRealmDisplay width={width} height={height} position={player.position} monsters={monsters} monsterRealms={monsterRealms} />
       </div>

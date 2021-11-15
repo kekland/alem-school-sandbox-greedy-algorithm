@@ -1,7 +1,7 @@
 import React, { useRef } from 'react'
 import { getReplayData } from '../replay-parser'
 
-export const ReplayPanel = ({ replayData, replayFrame, scores, autoplayEnabled, setAutoplayEnabled, setReplayData, setReplayFrame }) => {
+export const ReplayPanel = ({ replayData, replayFrame, scores, autoplayEnabled, setAutoplayEnabled, toggleAiPredictions, setReplayData, setReplayFrame }) => {
   const inputRef = useRef()
 
   const isReplayFrameValid = (n) => {
@@ -28,7 +28,8 @@ export const ReplayPanel = ({ replayData, replayFrame, scores, autoplayEnabled, 
         setReplayFrame(0);
         setReplayData(data);
         setAutoplayEnabled(false);
-      }}>Load</button>
+      }}>Load</button> &nbsp;
+      <button onClick={toggleAiPredictions}>Toggle intent display</button>
       {
         replayData ? <div style={{ marginTop: 12 }}>
           <button onClick={() => diffReplayFrame(-1)}>-1</button>
@@ -49,7 +50,13 @@ export const ReplayPanel = ({ replayData, replayFrame, scores, autoplayEnabled, 
           </span>
           <button onClick={() => {
             setAutoplayEnabled(!autoplayEnabled)
-          }}>{autoplayEnabled? 'Pause' : 'Play' }</button> &nbsp;
+          }}>{autoplayEnabled ? 'Pause' : 'Play'}</button> &nbsp;
+          <button onClick={() => {
+            setReplayFrame(0);
+          }}>{'Start'}</button> &nbsp;
+          <button onClick={() => {
+            setReplayFrame(replayData.frames.length);
+          }}>{'End'}</button> &nbsp;
           <button onClick={() => {
             setReplayData(null);
             setReplayFrame(null);
