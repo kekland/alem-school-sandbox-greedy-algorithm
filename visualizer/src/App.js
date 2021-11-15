@@ -120,22 +120,16 @@ const App = () => {
   useEffect(() => {
     let id;
 
-    const loop = () => {
-      if (autoplayEnabled) {
-        if (replayFrame === replayData.frames.length) {
-          setAutoplayEnabled(false);
-          return;
-        }
-        else {
-          setReplayFrame((v) => v + 1);
-        }
+    if (autoplayEnabled) {
+      if (replayFrame === replayData.frames.length) {
+        setAutoplayEnabled(false);
+        return;
       }
-      id = setTimeout(loop, 500)
+      else {
+        id = setTimeout(() => setReplayFrame((v) => v + 1), 500)
+      }
     }
 
-    if (autoplayEnabled) {
-      id = setTimeout(loop, 500)
-    }
 
     return () => id ? clearTimeout(id) : null
   }, [autoplayEnabled, replayFrame, replayData])
