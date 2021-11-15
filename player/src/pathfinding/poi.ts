@@ -63,8 +63,9 @@ export const getPointsOfInterestWithSafety = ({ start, blocks, safetyMatrix, vis
     blocks,
     entities,
     predicate: (i, position) => {
-      return isInMonsterRealm({ blocks, position, realms: monsterRealms }).length > 0 ||
-        safetyMatrix[position.y][position.x] <= 2;
+      return false;
+      // return isInMonsterRealm({ blocks, position, realms: monsterRealms }).length > 0 ||
+      //   safetyMatrix[position.y][position.x] <= 2;
     },
   });
 
