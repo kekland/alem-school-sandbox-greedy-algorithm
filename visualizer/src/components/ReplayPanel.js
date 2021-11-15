@@ -49,7 +49,13 @@ export const ReplayPanel = ({ replayData, replayFrame, scores, autoplayEnabled, 
           </span>
           <button onClick={() => {
             setAutoplayEnabled(!autoplayEnabled)
-          }}>{autoplayEnabled? 'Pause' : 'Play' }</button> &nbsp;
+          }}>{autoplayEnabled ? 'Pause' : 'Play'}</button> &nbsp;
+          <button onClick={() => {
+            setReplayFrame(0);
+          }}>{'Start'}</button> &nbsp;
+          <button onClick={() => {
+            setReplayFrame(replayData.frames.length);
+          }}>{'End'}</button> &nbsp;
           <button onClick={() => {
             setReplayData(null);
             setReplayFrame(null);
