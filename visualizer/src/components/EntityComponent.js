@@ -4,6 +4,7 @@ import { getBlockName } from 'player'
 import Monster from '../assets/monster.png'
 import MonsterRealm from '../assets/monster-realm.png'
 import Player from '../assets/player.png'
+import PlayerDead from '../assets/player-dead.png'
 import PlayerOther from '../assets/player-2.png'
 import { lerpColor } from '../utils'
 
@@ -14,7 +15,13 @@ export const EntityComponent = ({ id, entities, style, monsterRealm, onChange })
 
   const player = entities.find((v) => v.type === 'player')
   if (player) {
+    if(player.dead) {
+      contentImgs.push(PlayerDead)
+    }
+    else {
     contentImgs.push(Player);
+    }
+
     if (player.name) {
       text1.push(...player.name.split(','))
     }

@@ -158,6 +158,10 @@ export const getStateFromReplayFrame = (data, frame) => {
         delete state.monsters[id]
         delete state.map.monsterRealms[id]
       }
+      else if (type.startsWith('p')) {
+        const id = parseInt(type[1]);
+        state.players[id].dead = true
+      }
       else if (type === Block.coin) {
         for (const player of players) {
           const id = player.n[1]
